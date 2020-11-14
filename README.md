@@ -1,1 +1,1 @@
-# BackgroundStractionForMovingCamera
+# BackgroundSubtractionForMovingCamera
