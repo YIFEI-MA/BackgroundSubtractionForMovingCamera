@@ -1,0 +1,104 @@
+cd cars1
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd cars2
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd cars3
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd cars4
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd cars5
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd cars6
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd cars7
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd cars8
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd cars9
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd cars10
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd marple1
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd marple2
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd marple3
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd marple4
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd marple5
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd marple6
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd marple7
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd marple8
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd marple9
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd marple10
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd marple11
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd marple12
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd marple13
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd people1
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd people2
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..
+cd tennis
+mogrify -format ppm *.jpg
+rm *.jpg
+cd ..

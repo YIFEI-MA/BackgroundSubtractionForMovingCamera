@@ -1,0 +1,89 @@
+Ground truth definition file; do not change!
+
+Total number of regions:
+2
+Scale of region 0:
+0
+Scale of region 1:
+255
+
+Confusion penality matrix:
+0 1
+1 0
+
+Total number of frames in this shot:
+328
+Total number of labeled frames for this shot:
+12
+Frame number:
+0
+File name:
+marple1_001.pgm
+Input file name:
+marple1_001.ppm
+Frame number:
+9
+File name:
+marple1_010.pgm
+Input file name:
+marple1_010.ppm
+Frame number:
+19
+File name:
+marple1_020.pgm
+Input file name:
+marple1_020.ppm
+Frame number:
+29
+File name:
+marple1_030.pgm
+Input file name:
+marple1_030.ppm
+Frame number:
+39
+File name:
+marple1_040.pgm
+Input file name:
+marple1_040.ppm
+Frame number:
+49
+File name:
+marple1_050.pgm
+Input file name:
+marple1_050.ppm
+Frame number:
+99
+File name:
+marple1_100.pgm
+Input file name:
+marple1_100.ppm
+Frame number:
+149
+File name:
+marple1_150.pgm
+Input file name:
+marple1_150.ppm
+Frame number:
+199
+File name:
+marple1_200.pgm
+Input file name:
+marple1_200.ppm
+Frame number:
+249
+File name:
+marple1_250.pgm
+Input file name:
+marple1_250.ppm
+Frame number:
+299
+File name:
+marple1_300.pgm
+Input file name:
+marple1_300.ppm
+Frame number:
+327
+File name:
+marple1_328.pgm
+Input file name:
+marple1_328.ppm

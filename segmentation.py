@@ -11,14 +11,14 @@ def segmentation(img, n_scales):
     for i in range(1, n_scales+1):
         # i = np.random.randint(i*n_segments, 10*i+1)
         # need to fix scale numbers, issues with K-mean clustering
-        labels.append([slic(img, n_segments*50*i, compactness=10.0, max_iter=20, sigma=1, enforce_connectivity=True, start_label=1), n_segments*i])
+        labels.append([slic(img, n_segments*10*i, compactness=10.0, max_iter=20, sigma=1, enforce_connectivity=True, start_label=1), n_segments*i*10])
 
     return labels
 
 
 if __name__ == '__main__':
     image = astronaut()
-    labels_list = segmentation(image, 6)
+    labels_list = segmentation(image, 3)
     fig, ax = plt.subplots(3, 3, figsize=(30, 20), sharex=True, sharey=True)
     for i in range(len(labels_list)):
         title = labels_list[i][1]

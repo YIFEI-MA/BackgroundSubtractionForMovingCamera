@@ -1,0 +1,146 @@
+Ground truth definition file; do not change!
+
+Total number of regions:
+3
+Scale of region 0:
+0
+Scale of region 1:
+255
+Scale of region 2:
+229
+
+Confusion penality matrix:
+0 1 1 
+1 0 1 
+1 1 0 
+
+Total number of frames in this shot:
+800
+Total number of labeled frames for this shot:
+21
+Frame number:
+0
+File name:
+marple6_001.pgm
+Input file name:
+marple6_001.ppm
+Frame number:
+9
+File name:
+marple6_010.pgm
+Input file name:
+marple6_010.ppm
+Frame number:
+19
+File name:
+marple6_020.pgm
+Input file name:
+marple6_020.ppm
+Frame number:
+29
+File name:
+marple6_030.pgm
+Input file name:
+marple6_030.ppm
+Frame number:
+39
+File name:
+marple6_040.pgm
+Input file name:
+marple6_040.ppm
+Frame number:
+49
+File name:
+marple6_050.pgm
+Input file name:
+marple6_050.ppm
+Frame number:
+99
+File name:
+marple6_100.pgm
+Input file name:
+marple6_100.ppm
+Frame number:
+149
+File name:
+marple6_150.pgm
+Input file name:
+marple6_150.ppm
+Frame number:
+199
+File name:
+marple6_200.pgm
+Input file name:
+marple6_200.ppm
+Frame number:
+249
+File name:
+marple6_250.pgm
+Input file name:
+marple6_250.ppm
+Frame number:
+299
+File name:
+marple6_300.pgm
+Input file name:
+marple6_300.ppm
+Frame number:
+349
+File name:
+marple6_350.pgm
+Input file name:
+marple6_350.ppm
+Frame number:
+399
+File name:
+marple6_400.pgm
+Input file name:
+marple6_400.ppm
+Frame number:
+449
+File name:
+marple6_450.pgm
+Input file name:
+marple6_450.ppm
+Frame number:
+499
+File name:
+marple6_500.pgm
+Input file name:
+marple6_500.ppm
+Frame number:
+549
+File name:
+marple6_550.pgm
+Input file name:
+marple6_550.ppm
+Frame number:
+599
+File name:
+marple6_600.pgm
+Input file name:
+marple6_600.ppm
+Frame number:
+649
+File name:
+marple6_650.pgm
+Input file name:
+marple6_650.ppm
+Frame number:
+699
+File name:
+marple6_700.pgm
+Input file name:
+marple6_700.ppm
+Frame number:
+749
+File name:
+marple6_750.pgm
+Input file name:
+marple6_750.ppm
+Frame number:
+799
+File name:
+marple6_800.pgm
+Input file name:
+marple6_800.ppm

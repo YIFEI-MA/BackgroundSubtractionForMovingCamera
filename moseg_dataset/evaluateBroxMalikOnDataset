@@ -1,0 +1,4 @@
+./MoSegEvalAll allShots.txt 10 allTracksBroxMalik10.txt
+./MoSegEvalAll allShots.txt 50 allTracksBroxMalik50.txt
+./MoSegEvalAll allShots.txt 200 allTracksBroxMalik200.txt
+./MoSegEvalAll allShots.txt all allTracksBroxMalikAll.txt

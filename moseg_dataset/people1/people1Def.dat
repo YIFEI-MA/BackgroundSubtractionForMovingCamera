@@ -1,0 +1,48 @@
+Ground truth definition file; do not change!
+
+Total number of regions:
+2
+Scale of region 0:
+0
+Scale of region 1:
+255
+
+Confusion penality matrix:
+0 1
+1 0
+
+Total number of frames in this shot:
+40
+Total number of labeled frames for this shot:
+5
+Frame number:
+0
+File name:
+people1_01.pgm
+Input file name:
+people1_01.ppm
+Frame number:
+9
+File name:
+people1_10.pgm
+Input file name:
+people1_10.ppm
+Frame number:
+19
+File name:
+people1_20.pgm
+Input file name:
+people1_20.ppm
+Frame number:
+29
+File name:
+people1_30.pgm
+Input file name:
+people1_30.ppm
+Frame number:
+39
+File name:
+people1_40.pgm
+Input file name:
+people1_40.ppm
+

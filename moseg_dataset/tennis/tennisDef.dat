@@ -1,0 +1,119 @@
+Ground truth definition file; do not change!
+
+Total number of regions:
+4
+Scale of region 0:
+0
+Scale of region 1:
+255
+Scale of region 2:
+179
+Scale of region 3:
+26
+
+Confusion penality matrix:
+0 1 0 0
+1 0 0 0
+0 0 0 1
+0 0 1 0
+
+Total number of frames in this shot:
+465
+Total number of labeled frames for this shot:
+16
+Frame number:
+0
+File name:
+tennis454.pgm
+Input file name:
+tennis454.ppm
+Frame number:
+9
+File name:
+tennis463.pgm
+Input file name:
+tennis463.ppm
+Frame number:
+19
+File name:
+tennis473.pgm
+Input file name:
+tennis473.ppm
+Frame number:
+29
+File name:
+tennis483.pgm
+Input file name:
+tennis483.ppm
+Frame number:
+36
+File name:
+tennis490.pgm
+Input file name:
+tennis490.ppm
+Frame number:
+39
+File name:
+tennis493.pgm
+Input file name:
+tennis493.ppm
+Frame number:
+49
+File name:
+tennis503.pgm
+Input file name:
+tennis503.ppm
+Frame number:
+99
+File name:
+tennis553.pgm
+Input file name:
+tennis553.ppm
+Frame number:
+149
+File name:
+tennis603.pgm
+Input file name:
+tennis603.ppm
+Frame number:
+199
+File name:
+tennis653.pgm
+Input file name:
+tennis653.ppm
+Frame number:
+249
+File name:
+tennis703.pgm
+Input file name:
+tennis703.ppm
+Frame number:
+299
+File name:
+tennis753.pgm
+Input file name:
+tennis753.ppm
+Frame number:
+349
+File name:
+tennis803.pgm
+Input file name:
+tennis803.ppm
+Frame number:
+399
+File name:
+tennis853.pgm
+Input file name:
+tennis853.ppm
+Frame number:
+449
+File name:
+tennis903.pgm
+Input file name:
+tennis903.ppm
+Frame number:
+465
+File name:
+tennis919.pgm
+Input file name:
+tennis919.ppm

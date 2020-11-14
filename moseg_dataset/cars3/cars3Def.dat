@@ -1,0 +1,38 @@
+Ground truth definition file; do not change!
+
+Total number of regions:
+3
+Scale of region 0:
+0
+Scale of region 1:
+255
+Scale of region 2:
+128
+
+Confusion penality matrix:
+0 1 1
+1 0 1
+1 1 0
+
+Total number of frames in this shot:
+19
+Total number of labeled frames for this shot:
+3
+Frame number:
+0
+File name:
+cars3_01.pgm
+Input file name:
+cars3_01.ppm
+Frame number:
+9
+File name:
+cars3_10.pgm
+Input file name:
+cars3_10.ppm
+Frame number:
+18
+File name:
+cars3_19.pgm
+Input file name:
+cars3_19.ppm
