@@ -3,6 +3,7 @@ import cv2
 from matplotlib import pyplot as plt
 from segmentation import segmentation, mark_boundaries
 import copy
+from scipy.spatial import distance
 
 
 image_sequence = []
@@ -15,10 +16,10 @@ while cap.isOpened():
         break
     image_sequence.append(frame)
 
-for frame in image_sequence:
-    cv2.imshow("frame", frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+# for frame in image_sequence:
+#     cv2.imshow("frame", frame)
+#     if cv2.waitKey(1) & 0xFF == ord('q'):
+#         break
 
 
 image_sift_sequence = []
@@ -39,25 +40,25 @@ for image in image_sequence:
     #     break
 
 
-image_label_sequence = []
-for image in image_sequence:
-    labels = segmentation(image, 3)
-    image_label_sequence.append(labels)
-
-np.save('segmentation.npy', np.asarray(image_label_sequence))
+# image_label_sequence = []
+# for image in image_sequence:
+#     labels = segmentation(image, 3)
+#     image_label_sequence.append(labels)
+#
+# np.save('segmentation.npy', np.asarray(image_label_sequence))
 
 image_label_sequence = np.load("segmentation.npy")
-outputs = []
-for i in range(len(image_sequence)):
-    image = image_sequence[i]
-    labels = image_label_sequence[i]
-    for label in labels:
-        outputs.append(mark_boundaries(image, label))
-
-for img in outputs:
-    cv2.imshow("segmentation", img)
-    if cv2.waitKey(10) & 0xFF == ord('q'):
-        break
+# outputs = []
+# for i in range(len(image_sequence)):
+#     image = image_sequence[i]
+#     labels = image_label_sequence[i]
+#     for label in labels:
+#         outputs.append(mark_boundaries(image, label))
+#
+# for img in outputs:
+#     cv2.imshow("segmentation", img)
+#     if cv2.waitKey(10) & 0xFF == ord('q'):
+#         break
 
 
 label = image_label_sequence[0][2]
@@ -71,15 +72,25 @@ kp, des = sift.detectAndCompute(image, mask=mask)
 out_image = image
 img = cv2.drawKeypoints(image, kp, out_image)
 print(len(kp))
-cv2.imshow("sift", img)
-cv2.waitKey(10000)
+# cv2.imshow("sift", img)
+# cv2.waitKey(10000)
 
 
 def get_trans_matrices(image1, pt1, image2, pt2):
     pass
 
 
-# original_features_sequence = copy.deepcopy(image_sift_sequence)
+def get_new_coord(x, y, matrix):
+    p = (x, y)  # original point
+    px = (matrix[0][0] * p[0] + matrix[0][1] * p[1] + matrix[0][2]) / (
+        (matrix[2][0] * p[0] + matrix[2][1] * p[1] + matrix[2][2]))
+    py = (matrix[1][0] * p[0] + matrix[1][1] * p[1] + matrix[1][2]) / (
+        (matrix[2][0] * p[0] + matrix[2][1] * p[1] + matrix[2][2]))
+    p_after = (int(px), int(py))  # after transformation
+    return p_after
+
+
+original_features_sequence = copy.deepcopy(image_sift_sequence)
 
 for i in range(len(image_sequence)):
     image = image_sequence[i]
