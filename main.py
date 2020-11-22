@@ -61,23 +61,51 @@ image_label_sequence = np.load("segmentation.npy")
 #         break
 
 
-label = image_label_sequence[0][2]
-image = image_sequence[0]
-print(np.max(label))
-mask = label == 3
-mask = np.array(mask, dtype=np.uint8)
-
-sift = cv2.xfeatures2d.SIFT_create(nfeatures=10000)
-kp, des = sift.detectAndCompute(image, mask=mask)
-out_image = image
-img = cv2.drawKeypoints(image, kp, out_image)
-print(len(kp))
+# label = image_label_sequence[0][2]
+# image = image_sequence[0]
+# print(np.max(label))
+# mask = label == 3
+# mask = np.array(mask, dtype=np.uint8)
+#
+# sift = cv2.xfeatures2d.SIFT_create(nfeatures=10000)
+# kp, des = sift.detectAndCompute(image, mask=mask)
+# out_image = image
+# img = cv2.drawKeypoints(image, kp, out_image)
+# print(len(kp))
 # cv2.imshow("sift", img)
 # cv2.waitKey(10000)
 
 
-def get_trans_matrices(image1, pt1, image2, pt2):
-    pass
+def get_trans_matrices(current_keys, current_descriptors, next_keys, next_descriptors):
+    FLANN_INDEX_KDTREE = 1
+    index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+    search_params = dict(checks=50)
+
+    flann = cv2.FlannBasedMatcher(index_params, search_params)
+    matches = flann.knnMatch(current_descriptors, next_descriptors, k=2)
+
+    # store all the good matches as per Lowe's ratio test.
+    good = []
+    for m, n in matches:
+        if m.distance < 0.7 * n.distance:
+            good.append(m)
+
+    src_pts = np.float32([current_keys[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
+    dst_pts = np.float32([next_keys[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
+
+    M, _ = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+
+    return M
+
+    # if len(good) > 3:
+    #     src_pts = np.float32([current_keys[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
+    #     dst_pts = np.float32([next_keys[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
+    #
+    #     M, _ = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+    #
+    #     return M
+    # else:
+    #     return None
 
 
 def get_new_coord(x, y, matrix):
@@ -90,12 +118,82 @@ def get_new_coord(x, y, matrix):
     return p_after
 
 
-original_features_sequence = copy.deepcopy(image_sift_sequence)
+# original_features_sequence = copy.deepcopy(image_sift_sequence)
 
+prob_dict = {}
+feature_key_sequence = []
+feature_isBackground_sequence = []
+for image_features in image_sift_sequence:
+    temp = {}
+    temp2 = {}
+    for key_point in image_features[0]:
+        temp[key_point.pt] = -1
+        temp2[key_point.pt] = True
+    feature_key_sequence.append(temp)
+    feature_isBackground_sequence.append(temp2)
+
+current_feature_index = 0
 for i in range(len(image_sequence)):
-    image = image_sequence[i]
+    current_image = image_sequence[i]
     current_key, current_descriptor = image_sift_sequence[i]
-
     for next_frame_index in range(i, len(image_sequence)):
+        next_image = image_sequence[next_frame_index]
         next_key, next_descriptor = image_sift_sequence[next_frame_index]
+        current_labels = image_label_sequence[i]
+        next_labels = image_label_sequence[next_frame_index]
+
+        matrix = get_trans_matrices(current_key, current_descriptor, next_key, next_descriptor)
+
+        FLANN_INDEX_KDTREE = 1
+        index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+        search_params = dict(checks=50)
+
+        flann = cv2.FlannBasedMatcher(index_params, search_params)
+        matches = flann.knnMatch(current_descriptor, next_descriptor, k=2)
+
+        # store all the good matches as per Lowe's ratio test.
+        good = []
+        for m, n in matches:
+            if m.distance < 0.7 * n.distance:
+                good.append(m)
+
+        for m in good:
+            key_point1 = current_key[m.queryIdx].pt
+            key_point1_transformed = get_new_coord(key_point1[0], key_point1[1], matrix)
+            key_point2 = next_key[m.trainIdx].pt
+
+            if feature_key_sequence[i][key_point1] == -1:
+                feature_key_sequence[i][key_point1] = current_feature_index
+                feature_key_sequence[next_frame_index][key_point2] = current_feature_index
+                current_feature_index += 1
+
+                x1, y1 = int(key_point1[0]), int(key_point1[1])
+                x2, y2 = int(key_point2[0]), int(key_point2[1])
+
+                for current_seg in current_labels:
+                    for next_seg in next_labels:
+                        # print(current_seg)
+                        # print(current_seg.shape)
+                        # print(x1, y1)
+                        mask1 = np.array(current_seg == current_seg[y1][x1], dtype=np.uint8)
+                        mask2 = np.array(next_seg == next_seg[y2][x2], dtype=np.uint8)
+                        kp1, des1 = sift.detectAndCompute(current_image, mask=mask1)
+                        kp2, des2 = sift.detectAndCompute(next_image, mask=mask2)
+
+                        seg_matrix = get_trans_matrices(kp1, des1, kp2, des2)
+                        key_point1_transformed_seg = get_new_coord(key_point1[0], key_point1[1], seg_matrix)
+                        print(matrix, seg_matrix, sep='\n')
+                        print(key_point1_transformed, key_point1_transformed_seg)
+                        print(distance.euclidean(key_point1_transformed, key_point1_transformed_seg))
+
+
+
+
+
+
+
+
+
+
+
 
