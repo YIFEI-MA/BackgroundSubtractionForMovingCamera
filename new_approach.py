@@ -33,39 +33,39 @@ for image in image_sequence:
     # break
     image_sift_sequence.append((kp, des))
     print(len(kp))
-    out_image = image
-    img = cv2.drawKeypoints(image, kp, out_image)
-    cv2.imshow("features", img)
-    if cv2.waitKey(10) & 0xFF == ord('q'):
-        break
+    # out_image = image
+    # img = cv2.drawKeypoints(image, kp, out_image)
+    # cv2.imshow("features", img)
+    # if cv2.waitKey(10) & 0xFF == ord('q'):
+    #     break
 
 
-image_label_sequence = []
-for image in image_sequence:
-    labels = segmentation(image, 3)
-    image_label_sequence.append(labels)
+# image_label_sequence = []
+# for image in image_sequence:
+#     labels = segmentation(image, 3)
+#     image_label_sequence.append(labels)
 #
 # np.save('segmentation.npy', np.asarray(image_label_sequence))
 
-# image_label_sequence = np.load("segmentation.npy")
+image_label_sequence = np.load("segmentation.npy")
 outputs = []
 for i in range(len(image_sequence)):
     image = image_sequence[i]
     labels = image_label_sequence[i]
-    j = 0
+    # j = 0
     for label in labels:
         outputs.append(mark_boundaries(image, label))
-#         cv2.imwrite('segs_{}_{}.jpg'.format(i, j), mark_boundaries(image, label))
-#         j += 1
-#     break
-# exit()
-i = 0
+        # cv2.imwrite('segs_{}_{}.jpg'.format(i, j), mark_boundaries(image, label))
+        # j += 1
+
+
+# i = 0
 for img in outputs:
-    img = cv2.convertScaleAbs(img, alpha=(255.0))
-    cv2.imwrite('segs_{}.jpg'.format(i), img, )
+    # img = cv2.convertScaleAbs(img, alpha=(255.0))
+    # cv2.imwrite('segs_{}.jpg'.format(i), img, )
     cv2.imshow("segmentation", img)
-    i += 1
-    if i >= 10: exit()
+    # i += 1
+    # if i >= 10: exit()
     if cv2.waitKey(10) & 0xFF == ord('q'):
         break
 
@@ -194,15 +194,5 @@ for i in range(len(image_sequence)):
                         print(matrix, seg_matrix, sep='\n')
                         print(key_point1_transformed, key_point1_transformed_seg)
                         print(distance.euclidean(key_point1_transformed, key_point1_transformed_seg))
-
-
-
-
-
-
-
-
-
-
 
 
