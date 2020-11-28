@@ -2,9 +2,11 @@ import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 from segmentation import segmentation, mark_boundaries
-import copy
 from scipy.spatial import distance
 
+from sklearn.cluster import KMeans, DBSCAN
+
+from mpl_toolkits.mplot3d import Axes3D
 
 image_sequence = []
 # read cars2
@@ -32,7 +34,7 @@ for image in image_sequence:
     # print(type(des))
     # break
     image_sift_sequence.append((kp, des))
-    print(len(kp))
+    # print(len(kp))
     # out_image = image
     # img = cv2.drawKeypoints(image, kp, out_image)
     # cv2.imshow("features", img)
@@ -48,26 +50,26 @@ for image in image_sequence:
 # np.save('segmentation.npy', np.asarray(image_label_sequence))
 
 image_label_sequence = np.load("segmentation.npy")
-outputs = []
-for i in range(len(image_sequence)):
-    image = image_sequence[i]
-    labels = image_label_sequence[i]
-    # j = 0
-    for label in labels:
-        outputs.append(mark_boundaries(image, label))
-        # cv2.imwrite('segs_{}_{}.jpg'.format(i, j), mark_boundaries(image, label))
-        # j += 1
+# outputs = []
+# for i in range(len(image_sequence)):
+#     image = image_sequence[i]
+#     labels = image_label_sequence[i]
+#     # j = 0
+#     for label in labels:
+#         outputs.append(mark_boundaries(image, label))
+#         # cv2.imwrite('segs_{}_{}.jpg'.format(i, j), mark_boundaries(image, label))
+#         # j += 1
 
 
-# i = 0
-for img in outputs:
-    # img = cv2.convertScaleAbs(img, alpha=(255.0))
-    # cv2.imwrite('segs_{}.jpg'.format(i), img, )
-    cv2.imshow("segmentation", img)
-    # i += 1
-    # if i >= 10: exit()
-    if cv2.waitKey(10) & 0xFF == ord('q'):
-        break
+# # i = 0
+# for img in outputs:
+#     # img = cv2.convertScaleAbs(img, alpha=(255.0))
+#     # cv2.imwrite('segs_{}.jpg'.format(i), img, )
+#     cv2.imshow("segmentation", img)
+#     # i += 1
+#     # if i >= 10: exit()
+#     if cv2.waitKey(10) & 0xFF == ord('q'):
+#         break
 
 
 # label = image_label_sequence[0][2]
@@ -99,22 +101,25 @@ def get_trans_matrices(current_keys, current_descriptors, next_keys, next_descri
         if m.distance < 0.7 * n.distance:
             good.append(m)
 
-    src_pts = np.float32([current_keys[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
-    dst_pts = np.float32([next_keys[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
-
-    M, _ = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
-
-    return M
-
-    # if len(good) > 3:
-    #     src_pts = np.float32([current_keys[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
-    #     dst_pts = np.float32([next_keys[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
+    # src_pts = np.float32([current_keys[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
+    # dst_pts = np.float32([next_keys[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
     #
-    #     M, _ = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
-    #
-    #     return M
-    # else:
-    #     return None
+    # M, _ = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+    # print(len(good))
+    if len(good) > 5:
+        src_pts = np.float32([current_keys[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
+        # print(good)
+        # for pts in src_pts:
+        #     print(pts)
+        # print(len(src_pts))
+        dst_pts = np.float32([next_keys[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
+
+        # M, _ = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+        M, _ = cv2.findHomography(src_pts, dst_pts, 0)
+
+        return M
+    else:
+        return np.zeros(1)
 
 
 def get_new_coord(x, y, matrix):
@@ -126,73 +131,122 @@ def get_new_coord(x, y, matrix):
     p_after = (int(px), int(py))  # after transformation
     return p_after
 
-
-# original_features_sequence = copy.deepcopy(image_sift_sequence)
-
-prob_dict = {}
-feature_key_sequence = []
-feature_isBackground_sequence = []
-for image_features in image_sift_sequence:
-    temp = {}
-    temp2 = {}
-    for key_point in image_features[0]:
-        temp[key_point.pt] = -1
-        temp2[key_point.pt] = True
-    feature_key_sequence.append(temp)
-    feature_isBackground_sequence.append(temp2)
-
-current_feature_index = 0
-for i in range(len(image_sequence)):
-    current_image = image_sequence[i]
-    current_key, current_descriptor = image_sift_sequence[i]
-    for next_frame_index in range(i, len(image_sequence)):
-        next_image = image_sequence[next_frame_index]
-        next_key, next_descriptor = image_sift_sequence[next_frame_index]
-        current_labels = image_label_sequence[i]
-        next_labels = image_label_sequence[next_frame_index]
-
-        matrix = get_trans_matrices(current_key, current_descriptor, next_key, next_descriptor)
-
-        FLANN_INDEX_KDTREE = 1
-        index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
-        search_params = dict(checks=50)
-
-        flann = cv2.FlannBasedMatcher(index_params, search_params)
-        matches = flann.knnMatch(current_descriptor, next_descriptor, k=2)
-
-        # store all the good matches as per Lowe's ratio test.
-        good = []
-        for m, n in matches:
-            if m.distance < 0.7 * n.distance:
-                good.append(m)
-
-        for m in good:
-            key_point1 = current_key[m.queryIdx].pt
-            key_point1_transformed = get_new_coord(key_point1[0], key_point1[1], matrix)
-            key_point2 = next_key[m.trainIdx].pt
-
-            if feature_key_sequence[i][key_point1] == -1:
-                feature_key_sequence[i][key_point1] = current_feature_index
-                feature_key_sequence[next_frame_index][key_point2] = current_feature_index
-                current_feature_index += 1
-
-                x1, y1 = int(key_point1[0]), int(key_point1[1])
-                x2, y2 = int(key_point2[0]), int(key_point2[1])
-
-                for current_seg in current_labels:
-                    for next_seg in next_labels:
-                        # print(current_seg)
-                        # print(current_seg.shape)
-                        # print(x1, y1)
-                        mask1 = np.array(current_seg == current_seg[y1][x1], dtype=np.uint8)
-                        mask2 = np.array(next_seg == next_seg[y2][x2], dtype=np.uint8)
-                        kp1, des1 = sift.detectAndCompute(current_image, mask=mask1)
-                        kp2, des2 = sift.detectAndCompute(next_image, mask=mask2)
-
-                        seg_matrix = get_trans_matrices(kp1, des1, kp2, des2)
-                        key_point1_transformed_seg = get_new_coord(key_point1[0], key_point1[1], seg_matrix)
-                        print(matrix, seg_matrix, sep='\n')
-                        print(key_point1_transformed, key_point1_transformed_seg)
-                        print(distance.euclidean(key_point1_transformed, key_point1_transformed_seg))
+# image_dict_sequence = []
+# for kp, des in image_sift_sequence:
+#     temp = {}
+#     for keypoint in kp:
+#         temp[]
 
 
+def get_feature_matrix():
+    idx = np.argpartition(feature_distance, num_of_neighbour)
+    neighbour_coords = np.asarray(kp_coords)[idx[:num_of_neighbour]]
+    neighbour_coords_index = []
+    partial_kp = []
+    for index in idx[:num_of_neighbour]:
+        partial_kp.append(current_features[0][index])
+    partial_des = current_features[1][idx[:num_of_neighbour]]
+    return get_trans_matrices(partial_kp, partial_des, next_features[0], next_features[1])
+
+
+for current_index in range(len(image_sequence) - 1):
+    current_features = image_sift_sequence[current_index]
+    next_features = image_sift_sequence[current_index+2]
+    kp_index = {}
+    kp_coords = []
+    # coord_to_kp_index = {}
+    for i in range(len(current_features[0])):
+        keypoint = current_features[0][i]
+        kp_index[keypoint] = i
+        kp_coords.append(keypoint.pt)
+        # coord_to_kp_index[keypoint.pt] = i
+
+    matrix_features = []
+    matrix_feature_to_index = {}
+    for i in range(len(current_features[0])):
+        keypoint = current_features[0][i]
+        feature_distance = distance.cdist(np.asarray([keypoint.pt]), np.asarray(kp_coords)).squeeze()
+        num_of_neighbour = 15
+        # idx = np.argpartition(feature_distance, num_of_neighbour)
+        # neighbour_coords = np.asarray(kp_coords)[idx[:num_of_neighbour]]
+        # neighbour_coords_index = []
+        # partial_kp = []
+        # for index in idx[:num_of_neighbour]:
+        #     partial_kp.append(current_features[0][index])
+        # partial_des = current_features[1][idx[:num_of_neighbour]]
+        # trans_matrix = get_trans_matrices(partial_kp, partial_des, next_features[0], next_features[1])
+        trans_matrix = get_feature_matrix()
+        while True:
+            if trans_matrix.all() != np.zeros(1):
+                break
+            num_of_neighbour += 5
+            trans_matrix = get_feature_matrix()
+        u, s, _ = np.linalg.svd(trans_matrix)
+        # print(u, np.diag(s), _)
+        # print(np.dot(u, np.diag(s)))
+        u_s_sum = np.dot(u, np.diag(s)).sum(axis=1)
+        matrix_features.append(u_s_sum)
+        # matrix_feature_to_index[u_s_sum] = i
+
+    matrix_features = np.asarray(matrix_features)
+
+    indices_test_labels_z = np.where(matrix_features[:, 0] < -5000)[0]
+
+    # clustering = KMeans(n_clusters=2, random_state=0).fit(matrix_features)
+    clustering = DBSCAN(eps=1, min_samples=5, n_jobs=-1).fit(matrix_features)
+    feature_labels = clustering.labels_
+
+    indices_of_label = np.where(feature_labels == 1)[0]
+    indices_of_label2 = np.where(feature_labels == 0)[0]
+    print(np.max(feature_labels))
+
+    matrix_features1 = matrix_features[indices_of_label]
+    matrix_features2 = matrix_features[indices_of_label2]
+    matrix_features3 = matrix_features[np.where(feature_labels > 1)[0]]
+
+    matrix_features4 = matrix_features[indices_test_labels_z]
+
+    plots = []
+    for item in matrix_features:
+        if item[0] > -20000:
+            plots.append(item)
+    plots = np.asarray(plots)
+
+    plots1 = []
+    plots2 = []
+    for item in matrix_features1:
+        if item[0] > -20000:
+            plots1.append(item)
+    plots1 = np.asarray(plots1)
+
+    for item in matrix_features2:
+        if item[0] > -20000:
+            plots2.append(item)
+    plots2 = np.asarray(plots2)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    # ax.scatter3D(plots[:, 0], plots[:, 1], plots[:, 2], color="blue")
+    ax.scatter3D(plots1[:, 0], plots1[:, 1], plots1[:, 2], color="green")
+    ax.scatter3D(plots2[:, 0], plots2[:, 1], plots2[:, 2], color="red")
+
+    ax.set_xlabel('X Label')
+    ax.set_ylabel('Y Label')
+    ax.set_zlabel('Z Label')
+
+    plt.ion()
+    plt.show()
+
+    kp = []
+    for index in indices_of_label2:
+        kp.append(current_features[0][index])
+
+    image = image_sequence[current_index]
+    out_image = image
+
+    img = cv2.drawKeypoints(image, kp, out_image)
+    cv2.imshow("features", img)
+    if cv2.waitKey(1000000) & 0xFF == ord('q'):
+        break
+
+    break
