@@ -22,6 +22,7 @@ while cap.isOpened():
 #     cv2.imshow("frame", frame)
 #     if cv2.waitKey(1) & 0xFF == ord('q'):
 #         break
+ground_truth_image = cv2.imread(path + "/cars4/cars4_01.pgm")
 
 
 image_sift_sequence = []
@@ -155,11 +156,18 @@ for current_index in range(len(image_sequence) - 1):
     kp_index = {}
     kp_coords = []
     # coord_to_kp_index = {}
+    ground_truth_sift_label = []
     for i in range(len(current_features[0])):
         keypoint = current_features[0][i]
         kp_index[keypoint] = i
         kp_coords.append(keypoint.pt)
         # coord_to_kp_index[keypoint.pt] = i
+        coords = np.flip(np.asarray(keypoint.pt).astype(int))
+        if ground_truth_image[coords[0]][coords[1]].all() == 0:
+            ground_truth_sift_label.append(0)
+        else:
+            ground_truth_sift_label.append(1)
+    ground_truth_sift_label = np.asarray(ground_truth_sift_label)
 
     matrix_features = []
     matrix_feature_to_index = {}
@@ -181,6 +189,7 @@ for current_index in range(len(image_sequence) - 1):
                 break
             num_of_neighbour += 5
             trans_matrix = get_feature_matrix()
+
         u, s, _ = np.linalg.svd(trans_matrix)
         # print(u, np.diag(s), _)
         # print(np.dot(u, np.diag(s)))
@@ -193,18 +202,14 @@ for current_index in range(len(image_sequence) - 1):
     indices_test_labels_z = np.where(matrix_features[:, 0] < -5000)[0]
 
     # clustering = KMeans(n_clusters=2, random_state=0).fit(matrix_features)
-    clustering = DBSCAN(eps=1, min_samples=5, n_jobs=-1).fit(matrix_features)
-    feature_labels = clustering.labels_
+    # clustering = DBSCAN(eps=1, min_samples=5, n_jobs=-1).fit(matrix_features)
+    # feature_labels = clustering.labels_
 
-    indices_of_label = np.where(feature_labels == 1)[0]
-    indices_of_label2 = np.where(feature_labels == 0)[0]
-    print(np.max(feature_labels))
+    indices_of_label = np.where(ground_truth_sift_label == 0)[0]
+    indices_of_label2 = np.where(ground_truth_sift_label == 1)[0]
 
     matrix_features1 = matrix_features[indices_of_label]
     matrix_features2 = matrix_features[indices_of_label2]
-    matrix_features3 = matrix_features[np.where(feature_labels > 1)[0]]
-
-    matrix_features4 = matrix_features[indices_test_labels_z]
 
     plots = []
     for item in matrix_features:
@@ -246,7 +251,8 @@ for current_index in range(len(image_sequence) - 1):
 
     img = cv2.drawKeypoints(image, kp, out_image)
     cv2.imshow("features", img)
-    if cv2.waitKey(1000000) & 0xFF == ord('q'):
-        break
+    cv2.waitKey(0)
+    # if cv2.waitKey(1000000) & 0xFF == ord('q'):
+    #     break
 
     break
