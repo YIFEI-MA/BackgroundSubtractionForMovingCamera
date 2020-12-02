@@ -8,15 +8,19 @@ def matrix_to_point(trans_matrix):
     return u_s_sum
 
 
-def testing():
-    matrices = np.load("matrices.npy", allow_pickle=True)
-    ground_truth_sift_label = np.load("ground_truth.npy")
+def matrix_processing(matrices):
     matrix_features = []
     for matrix in matrices:
         feature_point = matrix_to_point(matrix.astype(float))
         matrix_features.append(feature_point)
-
     matrix_features = np.asarray(matrix_features)
+    return matrix_features
+
+
+def testing():
+    matrices = np.load("matrices.npy", allow_pickle=True)
+    ground_truth_sift_label = np.load("ground_truth.npy")
+    matrix_features = matrix_processing(matrices)
 
     indices_of_label = np.where(ground_truth_sift_label == 0)[0]
     indices_of_label2 = np.where(ground_truth_sift_label == 1)[0]
