@@ -171,6 +171,8 @@ for current_index in range(len(image_sequence) - 1):
 
     matrix_features = []
     matrix_feature_to_index = {}
+
+    trans_matrices_for_store = []
     for i in range(len(current_features[0])):
         keypoint = current_features[0][i]
         feature_distance = distance.cdist(np.asarray([keypoint.pt]), np.asarray(kp_coords)).squeeze()
@@ -190,12 +192,17 @@ for current_index in range(len(image_sequence) - 1):
             num_of_neighbour += 5
             trans_matrix = get_feature_matrix()
 
+        trans_matrices_for_store.append(trans_matrix)
         u, s, _ = np.linalg.svd(trans_matrix)
         # print(u, np.diag(s), _)
         # print(np.dot(u, np.diag(s)))
         u_s_sum = np.dot(u, np.diag(s)).sum(axis=1)
         matrix_features.append(u_s_sum)
         # matrix_feature_to_index[u_s_sum] = i
+
+    trans_matrices_for_store = np.asarray(trans_matrices_for_store, dtype=object)
+    np.save("matrices.npy", trans_matrices_for_store)
+    np.save("ground_truth.npy", ground_truth_sift_label)
 
     matrix_features = np.asarray(matrix_features)
 
