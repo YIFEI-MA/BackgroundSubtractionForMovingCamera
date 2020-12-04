@@ -62,9 +62,9 @@ def matrix_processing_new(matrices):
         concatenated_matrices = np.concatenate((concatenated_matrices, matrices[index].astype(float)), axis=1)
     print(concatenated_matrices.shape)
     u, s, _ = np.linalg.svd(concatenated_matrices)
-    a = np.dot(matrices[1].astype(float), u[:, 0])
-    b = np.dot(matrices[1].astype(float), u[:, 1])
-    c = np.dot(matrices[1].astype(float), u[:, 2])
+    # a = np.dot(matrices[1].astype(float), u[:, 0])
+    # b = np.dot(matrices[1].astype(float), u[:, 1])
+    # c = np.dot(matrices[1].astype(float), u[:, 2])
 
     for matrix in matrices:
         a = np.dot(matrix.astype(float), u[:, 0])
