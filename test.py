@@ -121,7 +121,6 @@ def testing():
     ground_temp = np.asarray(ground_temp, dtype=float)
     ground_truth_sift_label = np.array(ground_temp[0])
     for index in range(1, len(ground_temp)):
-        print(ground_temp[index])
         ground_truth_sift_label = np.concatenate((ground_truth_sift_label, ground_temp[index]))
 
     # matrices = np.load("matrices.npy", allow_pickle=True)
