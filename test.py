@@ -5,6 +5,7 @@ from sklearn.manifold import *
 
 from numpy import array, cross
 from numpy.linalg import solve, norm
+import os
 
 
 def matrix_to_point(trans_matrix):
@@ -33,11 +34,11 @@ def matrix_processing_tsne(matrices):
      'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule', 'wminkowski', 'nan_euclidean',
      'haversine'], or 'precomputed', or a callable
     """
-    # X_embedded = TSNE(n_components=3, perplexity=10, n_iter=1000, metric="sqeuclidean", random_state=0,
-    #                   method='exact', n_jobs=-1).fit_transform(matrix_features)
+    X_embedded = TSNE(n_components=3, perplexity=10, n_iter=1000, metric="l2", random_state=0,
+                      method='exact', n_jobs=-1).fit_transform(matrix_features)
     # X_embedded = Isomap(5, 3).fit_transform(matrix_features)
     # X_embedded = MDS(3, max_iter=100, n_init=1).fit_transform(matrix_features)
-    X_embedded = SpectralEmbedding(n_components=3, n_neighbors=10).fit_transform(matrix_features)
+    # X_embedded = SpectralEmbedding(n_components=3, n_neighbors=10).fit_transform(matrix_features)
     return X_embedded
 
 
@@ -102,12 +103,29 @@ def matrix_processing_new(matrices):
 
 
 def testing():
-    matrices = np.load("matrices.npy", allow_pickle=True)
-    print(len(matrices))
-    ground_truth_sift_label = np.load("ground_truth.npy")
+    path = "/Users/yifeima/Documents/CMPUT414/BackgroundSubtractionForMovingCamera/"
+    matrices_file = files = [i for i in os.listdir(path) if os.path.isfile(os.path.join(path, i)) and 'matrices' in i]
+    ground_truth_file = [i for i in os.listdir(path) if os.path.isfile(os.path.join(path, i)) and 'ground_truth' in i]
 
-    matrix_features = matrix_processing_new(matrices)
-    # matrix_features = matrix_processing_tsne(matrices)
+    matrices_temp = []
+    for file in matrices_file:
+        matrices_temp.append(np.load(file, allow_pickle=True))
+    matrices_temp = np.asarray(matrices_temp, dtype=float)
+    matrices = np.array(matrices_temp[0])
+    for index in range(1, len(matrices_temp)):
+        matrices = np.concatenate((matrices, matrices_temp[index]))
+
+    ground_temp = []
+    for file in ground_truth_file:
+        ground_temp.append(np.load(file, allow_pickle=True))
+    ground_temp = np.asarray(ground_temp, dtype=float)
+    ground_truth_sift_label = np.array(ground_temp[0])
+    for index in range(1, len(ground_temp)):
+        print(ground_temp[index])
+        ground_truth_sift_label = np.concatenate((ground_truth_sift_label, ground_temp[index]))
+
+    # matrix_features = matrix_processing_new(matrices)
+    matrix_features = matrix_processing_tsne(matrices)
     # exit()
     #
     # matrix_features = matrix_processing(matrices)

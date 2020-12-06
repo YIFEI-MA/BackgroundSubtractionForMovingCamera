@@ -152,7 +152,7 @@ def get_feature_matrix():
 
 for current_index in range(len(image_sequence) - 1):
     current_features = image_sift_sequence[current_index]
-    next_features = image_sift_sequence[current_index+2]
+    next_features = image_sift_sequence[current_index+35]
     kp_index = {}
     kp_coords = []
     # coord_to_kp_index = {}
@@ -201,8 +201,9 @@ for current_index in range(len(image_sequence) - 1):
         # matrix_feature_to_index[u_s_sum] = i
 
     trans_matrices_for_store = np.asarray(trans_matrices_for_store, dtype=object)
-    np.save("matrices.npy", trans_matrices_for_store)
-    np.save("ground_truth.npy", ground_truth_sift_label)
+    np.save("matrices8.npy", trans_matrices_for_store)
+    np.save("ground_truth8.npy", ground_truth_sift_label)
+    exit()
 
     matrix_features = np.asarray(matrix_features)
 
