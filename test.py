@@ -124,6 +124,10 @@ def testing():
         print(ground_temp[index])
         ground_truth_sift_label = np.concatenate((ground_truth_sift_label, ground_temp[index]))
 
+    # matrices = np.load("matrices.npy", allow_pickle=True)
+    # print(len(matrices))
+    # ground_truth_sift_label = np.load("ground_truth.npy")
+
     # matrix_features = matrix_processing_new(matrices)
     matrix_features = matrix_processing_tsne(matrices)
     # exit()
