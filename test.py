@@ -128,10 +128,10 @@ def testing():
     # ground_truth_sift_label = np.load("ground_truth.npy")
 
     # matrix_features = matrix_processing_new(matrices)
-    matrix_features = matrix_processing_tsne(matrices)
+    # matrix_features = matrix_processing_tsne(matrices)
     # exit()
     #
-    # matrix_features = matrix_processing(matrices)
+    matrix_features = matrix_processing(matrices)
     #
     indices_of_label = np.where(ground_truth_sift_label == 0)[0]
     indices_of_label2 = np.where(ground_truth_sift_label == 1)[0]
