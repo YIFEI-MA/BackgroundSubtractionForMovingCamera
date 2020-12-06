@@ -104,7 +104,7 @@ def matrix_processing_new(matrices):
 
 def testing():
     path = "/Users/yifeima/Documents/CMPUT414/BackgroundSubtractionForMovingCamera/"
-    matrices_file = files = [i for i in os.listdir(path) if os.path.isfile(os.path.join(path, i)) and 'matrices' in i]
+    matrices_file = [i for i in os.listdir(path) if os.path.isfile(os.path.join(path, i)) and 'matrices' in i]
     ground_truth_file = [i for i in os.listdir(path) if os.path.isfile(os.path.join(path, i)) and 'ground_truth' in i]
 
     matrices_temp = []
