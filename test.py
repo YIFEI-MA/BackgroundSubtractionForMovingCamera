@@ -2,10 +2,172 @@ import numpy as np
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from sklearn.manifold import *
-
+from sklearn.naive_bayes import *
+from scipy.spatial import distance
 from numpy import array, cross
 from numpy.linalg import solve, norm
 import os
+import cv2
+
+
+def get_trans_matrices(current_keys, current_descriptors, next_keys, next_descriptors):
+    FLANN_INDEX_KDTREE = 1
+    index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+    search_params = dict(checks=50)
+
+    flann = cv2.FlannBasedMatcher(index_params, search_params)
+    matches = flann.knnMatch(current_descriptors, next_descriptors, k=2)
+
+    # store all the good matches as per Lowe's ratio test.
+    good = []
+    for m, n in matches:
+        if m.distance < 0.7 * n.distance:
+            good.append(m)
+
+    # src_pts = np.float32([current_keys[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
+    # dst_pts = np.float32([next_keys[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
+    #
+    # M, _ = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+    # print(len(good))
+    if len(good) > 5:
+        src_pts = np.float32([current_keys[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
+        # print(good)
+        # for pts in src_pts:
+        #     print(pts)
+        # print(len(src_pts))
+        dst_pts = np.float32([next_keys[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
+
+        # M, _ = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+        M, _ = cv2.findHomography(src_pts, dst_pts, 0)
+
+        return M
+    else:
+        return np.zeros(1)
+
+
+def get_feature_matrix(feature_distance, num_of_neighbour, kp_coords, current_features, next_features):
+    idx = np.argpartition(feature_distance, num_of_neighbour)
+    partial_kp = []
+    for index in idx[:num_of_neighbour]:
+        partial_kp.append(current_features[0][index])
+    partial_des = current_features[1][idx[:num_of_neighbour]]
+    return get_trans_matrices(partial_kp, partial_des, next_features[0], next_features[1])
+
+
+def display(model):
+    image_sequence = []
+    # read cars2
+    path = "/Users/yifeima/Documents/CMPUT414/BackgroundSubtractionForMovingCamera/moseg_dataset/"
+    cap = cv2.VideoCapture(path + "/cars4/cars4_%02d.jpg")
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+        image_sequence.append(frame)
+
+    image_sift_sequence = []
+
+    sift = cv2.xfeatures2d.SURF_create()
+    for image in image_sequence:
+        kp, des = sift.detectAndCompute(image, None)
+        image_sift_sequence.append((kp, des))
+
+    for current_index in range(len(image_sequence) - 1):
+        current_matrices = []
+        current_features = image_sift_sequence[current_index]
+        next_features = image_sift_sequence[current_index + 1]
+        kp_index = {}
+        kp_coords = []
+        ground_truth_sift_label = []
+        for i in range(len(current_features[0])):
+            keypoint = current_features[0][i]
+            kp_index[keypoint] = i
+            kp_coords.append(keypoint.pt)
+
+        for i in range(len(current_features[0])):
+            keypoint = current_features[0][i]
+            feature_distance = distance.cdist(np.asarray([keypoint.pt]), np.asarray(kp_coords)).squeeze()
+            num_of_neighbour = 15
+            trans_matrix = get_feature_matrix(feature_distance, num_of_neighbour, kp_coords,
+                                              current_features, next_features)
+            while True:
+                if trans_matrix.all() != np.zeros(1):
+                    break
+                num_of_neighbour += 5
+                trans_matrix = get_feature_matrix(feature_distance, num_of_neighbour, kp_coords,
+                                                  current_features, next_features)
+            current_matrices.append(trans_matrix)
+
+        print(len(current_matrices), len(current_features[0]), current_index)
+
+        matrix_features_test = []
+        for matrix in current_matrices:
+            features = np.squeeze(np.matrix.flatten(matrix))
+            # w, _ = np.linalg.eig(matrix)
+            u, s, _ = np.linalg.svd(matrix)
+            u_s = np.dot(u, np.diag(s))
+            features = np.concatenate((features, s, u_s[:, 0], u_s[:, 1], u_s[:, 2]))
+            matrix_features_test.append(features)
+        matrix_features_test = np.asarray(matrix_features_test)
+
+        labels = model.predict(matrix_features_test)
+        print(labels.shape)
+        print(np.sum(labels))
+
+        kp = []
+        for i in range(len(labels)):
+            if labels[i] != 0:
+                kp.append(current_features[0][i])
+
+        image = image_sequence[current_index]
+        out_image = image
+
+        img = cv2.drawKeypoints(image, kp, out_image)
+        cv2.imwrite("output_{}.jpg".format(current_index), img)
+        cv2.imshow("features", img)
+        cv2.waitKey(0)
+
+
+    pass
+
+
+def naive_bayes(matrices, ground_truth_sift_label):
+    matrices = matrices.astype(float)
+    matrix_features = []
+    for matrix in matrices:
+        features = np.squeeze(np.matrix.flatten(matrix))
+        # w, _ = np.linalg.eig(matrix)
+        u, s, _ = np.linalg.svd(matrix)
+        u_s = np.dot(u, np.diag(s))
+        features = np.concatenate((features, s, u_s[:, 0], u_s[:, 1], u_s[:, 2]))
+        matrix_features.append(features)
+    matrix_features = np.asarray(matrix_features)
+    model = BernoulliNB()
+    model.fit(matrix_features, ground_truth_sift_label)
+
+    matrices_test = np.load("test.npy", allow_pickle=True)
+    ground_truth_test = np.load("test_ground.npy")
+
+    matrix_features_test = []
+    for matrix in matrices_test:
+        matrix = matrix.astype(float)
+        features = np.squeeze(np.matrix.flatten(matrix))
+        # w, _ = np.linalg.eig(matrix)
+        u, s, _ = np.linalg.svd(matrix)
+        u_s = np.dot(u, np.diag(s))
+        features = np.concatenate((features, s, u_s[:, 0], u_s[:, 1], u_s[:, 2]))
+        matrix_features_test.append(features)
+    matrix_features_test = np.asarray(matrix_features_test)
+
+    print("XXXXX")
+    print(model.score(matrix_features_test, ground_truth_test))
+    print(np.sum(model.predict(matrix_features_test)))
+    print(np.sum(ground_truth_test))
+    print(len(ground_truth_test))
+
+    display(model)
+
+    pass
 
 
 def matrix_to_point(trans_matrix):
@@ -110,15 +272,15 @@ def testing():
     matrices_temp = []
     for file in matrices_file:
         matrices_temp.append(np.load(file, allow_pickle=True))
-    matrices_temp = np.asarray(matrices_temp, dtype=float)
-    matrices = np.array(matrices_temp[0])
+    matrices_temp = np.asarray(matrices_temp)
+    matrices = np.array(matrices_temp[0].astype(float))
     for index in range(1, len(matrices_temp)):
-        matrices = np.concatenate((matrices, matrices_temp[index]))
+        matrices = np.concatenate((matrices, matrices_temp[index].astype(float)))
 
     ground_temp = []
     for file in ground_truth_file:
         ground_temp.append(np.load(file, allow_pickle=True))
-    ground_temp = np.asarray(ground_temp, dtype=float)
+    ground_temp = np.asarray(ground_temp)
     ground_truth_sift_label = np.array(ground_temp[0])
     for index in range(1, len(ground_temp)):
         ground_truth_sift_label = np.concatenate((ground_truth_sift_label, ground_temp[index]))
@@ -126,11 +288,14 @@ def testing():
     # matrices = np.load("matrices.npy", allow_pickle=True)
     # print(len(matrices))
     # ground_truth_sift_label = np.load("ground_truth.npy")
+    # print(ground_truth_sift_label)
 
     # matrix_features = matrix_processing_new(matrices)
     # matrix_features = matrix_processing_tsne(matrices)
     # exit()
     #
+    naive_bayes(matrices, ground_truth_sift_label)
+    exit()
     matrix_features = matrix_processing(matrices)
     #
     indices_of_label = np.where(ground_truth_sift_label == 0)[0]

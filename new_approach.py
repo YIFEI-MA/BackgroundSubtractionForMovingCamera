@@ -22,7 +22,7 @@ while cap.isOpened():
 #     cv2.imshow("frame", frame)
 #     if cv2.waitKey(1) & 0xFF == ord('q'):
 #         break
-ground_truth_image = cv2.imread(path + "/cars4/cars4_01.pgm")
+ground_truth_image = cv2.imread(path + "/cars4/cars4_10.pgm")
 
 
 image_sift_sequence = []
@@ -151,8 +151,8 @@ def get_feature_matrix():
 
 
 for current_index in range(len(image_sequence) - 1):
-    current_features = image_sift_sequence[current_index]
-    next_features = image_sift_sequence[current_index+35]
+    current_features = image_sift_sequence[10]
+    next_features = image_sift_sequence[10+3]
     kp_index = {}
     kp_coords = []
     # coord_to_kp_index = {}
@@ -201,8 +201,8 @@ for current_index in range(len(image_sequence) - 1):
         # matrix_feature_to_index[u_s_sum] = i
 
     trans_matrices_for_store = np.asarray(trans_matrices_for_store, dtype=object)
-    np.save("matrices8.npy", trans_matrices_for_store)
-    np.save("ground_truth8.npy", ground_truth_sift_label)
+    np.save("test.npy", trans_matrices_for_store)
+    np.save("test_ground.npy", ground_truth_sift_label)
     exit()
 
     matrix_features = np.asarray(matrix_features)
