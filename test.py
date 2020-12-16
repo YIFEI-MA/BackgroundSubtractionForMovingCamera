@@ -2,6 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from sklearn.manifold import *
+from sklearn.metrics import confusion_matrix
 from sklearn.naive_bayes import *
 from scipy.spatial import distance
 from numpy import array, cross
@@ -98,7 +99,7 @@ def display(model):
                                                   current_features, next_features)
             current_matrices.append(trans_matrix)
 
-        print(len(current_matrices), len(current_features[0]), current_index)
+        # print(len(current_matrices), len(current_features[0]), current_index)
 
         matrix_features_test = []
         for matrix in current_matrices:
@@ -111,8 +112,8 @@ def display(model):
         matrix_features_test = np.asarray(matrix_features_test)
 
         labels = model.predict(matrix_features_test)
-        print(labels.shape)
-        print(np.sum(labels))
+        # print(labels.shape)
+        # print(np.sum(labels))
 
         kp = []
         for i in range(len(labels)):
@@ -123,15 +124,30 @@ def display(model):
         out_image = image
 
         img = cv2.drawKeypoints(image, kp, out_image)
-        cv2.imwrite("output_{}.jpg".format(current_index), img)
+        cv2.imwrite("/Users/yifeima/Documents/CMPUT414/BackgroundSubtractionForMovingCamera"
+                    "/output/output_{}.jpg".format(current_index), img)
         cv2.imshow("features", img)
-        cv2.waitKey(0)
+        cv2.waitKey(10)
 
 
     pass
 
 
+def duplicate_data(matrices, ground_truth_sift_label):
+    indices = np.where(ground_truth_sift_label == 1)[0]
+    matrices_foreground = matrices[indices]
+    matrices_foreground = np.resize(matrices_foreground,
+                                    (len(ground_truth_sift_label) - 2*sum(ground_truth_sift_label), 3, 3))
+    labels = np.ones(len(ground_truth_sift_label) - 2*sum(ground_truth_sift_label))
+    matrices = np.append(matrices, matrices_foreground, axis=0)
+    ground_truth_sift_label = np.append(ground_truth_sift_label, labels)
+
+    p = np.random.permutation(len(matrices))
+    return matrices[p], ground_truth_sift_label[p]
+
+
 def naive_bayes(matrices, ground_truth_sift_label):
+    matrices, ground_truth_sift_label = duplicate_data(matrices, ground_truth_sift_label)
     matrices = matrices.astype(float)
     matrix_features = []
     for matrix in matrices:
@@ -142,7 +158,15 @@ def naive_bayes(matrices, ground_truth_sift_label):
         features = np.concatenate((features, s, u_s[:, 0], u_s[:, 1], u_s[:, 2]))
         matrix_features.append(features)
     matrix_features = np.asarray(matrix_features)
-    model = BernoulliNB()
+
+    from sklearn.neural_network import MLPClassifier
+    model = MLPClassifier(hidden_layer_sizes=(100, 40, 10),
+                          batch_size=100,
+                          learning_rate='adaptive', learning_rate_init=0.001,
+                          alpha=0.0001, max_iter=10000000000,
+                          early_stopping=True,
+                          n_iter_no_change=100)
+    # model = BernoulliNB()
     model.fit(matrix_features, ground_truth_sift_label)
 
     matrices_test = np.load("test.npy", allow_pickle=True)
@@ -159,15 +183,18 @@ def naive_bayes(matrices, ground_truth_sift_label):
         matrix_features_test.append(features)
     matrix_features_test = np.asarray(matrix_features_test)
 
-    print("XXXXX")
+    print(model.score(matrix_features, ground_truth_sift_label))
+    print("results for frame 10")
     print(model.score(matrix_features_test, ground_truth_test))
-    print(np.sum(model.predict(matrix_features_test)))
-    print(np.sum(ground_truth_test))
-    print(len(ground_truth_test))
+    predict = model.predict(matrix_features_test)
+    print("Total number of feature points {}".format(len(ground_truth_test)))
+    print("Total number of foreground feature points {}".format(np.sum(ground_truth_test)))
+    print("Total number of predicted foreground feature points {}".format(np.sum(predict)))
 
+    print("Confusion matrix:\n", confusion_matrix(ground_truth_test, predict))
+
+    exit()
     display(model)
-
-    pass
 
 
 def matrix_to_point(trans_matrix):

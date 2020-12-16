@@ -28,20 +28,20 @@ ground_truth_image = cv2.imread(path + "/cars4/cars4_10.pgm")
 image_sift_sequence = []
 
 sift = cv2.xfeatures2d.SURF_create()
+count = 0
 for image in image_sequence:
     kp, des = sift.detectAndCompute(image, None)
-    # print(type(kp))
-    # print("\n\n\n")
-    # print(type(des))
-    # break
     image_sift_sequence.append((kp, des))
     # print(len(kp))
-    # out_image = image
-    # img = cv2.drawKeypoints(image, kp, out_image)
+    out_image = image
+    img = cv2.drawKeypoints(image, kp, out_image)
+    cv2.imwrite("/Users/yifeima/Documents/CMPUT414/BackgroundSubtractionForMovingCamera"
+                "/feature image/output_sift_{}.jpg".format(count), img)
+    count += 1
     # cv2.imshow("features", img)
     # if cv2.waitKey(10) & 0xFF == ord('q'):
     #     break
-
+exit()
 
 # image_label_sequence = []
 # for image in image_sequence:
