@@ -10,6 +10,7 @@ from numpy.linalg import solve, norm
 import os
 import cv2
 from skimage.segmentation import slic, mark_boundaries
+import matplotlib.cm as cm
 
 
 def get_trans_matrices(current_keys, current_descriptors, next_keys, next_descriptors):
@@ -74,15 +75,32 @@ def get_feature_matrix(feature_distance, num_of_neighbour, kp_coords, current_fe
 
 
 def get_mask(image, kp):
-    labels = slic(image, 200, compactness=10.0, max_iter=20, sigma=1, enforce_connectivity=True,
+    """
+    Returns the binary mask using SLIC
+    :param image:
+    :param kp: which is the keypoints of the foreground
+    :return: a ndarray of binary mask
+    """
+    labels = slic(image, 500, compactness=10.0, max_iter=20, sigma=1, enforce_connectivity=True,
                   start_label=1)
-    print(np.max(labels))
-    print(labels)
+    region_list = np.zeros(np.max(labels))
+    for keypoint in kp:
+        coords = np.flip(np.asarray(keypoint.pt).astype(int))
+        region_index = labels[coords[0]][coords[1]]
+        region_list[region_index] += 1
+    # print(region_list)
+    mask = np.zeros(labels.shape)
+    for index in range(len(region_list)):
+        if region_list[index] > 4:
+            mask[np.where(labels == index)] = 1
+    # print(mask)
+    # plt.imsave("mask_test.png", mask, cmap=cm.gray)
+    return mask
 
 
 def display(model):
     """
-    Get the predicted result
+    Get the predicted result, and save the result to corresponding folders
     :param model:
     :return:
     """
@@ -151,18 +169,27 @@ def display(model):
                 kp.append(current_features[0][i])
 
         image = image_sequence[current_index]
-        get_mask(image, kp)
-        exit()
+        mask = get_mask(image, kp)
+        plt.imsave("/Users/yifeima/Documents/CMPUT414/BackgroundSubtractionForMovingCamera/mask/mask_{}.png"
+                   .format(current_index),
+                   mask, cmap=cm.gray)
         out_image = image
 
         img = cv2.drawKeypoints(image, kp, out_image)
         cv2.imwrite("/Users/yifeima/Documents/CMPUT414/BackgroundSubtractionForMovingCamera"
                     "/output/output_{}.jpg".format(current_index), img)
-        cv2.imshow("features", img)
-        cv2.waitKey(10)
+        # exit()
+        # cv2.imshow("features", img)
+        # cv2.waitKey(10)
 
 
 def duplicate_data(matrices, ground_truth_sift_label):
+    """
+    Duplicate data for training, returns a randomized training data with evenly amount for foreground and background.
+    :param matrices:
+    :param ground_truth_sift_label:
+    :return: An evenly distributed training data
+    """
     indices = np.where(ground_truth_sift_label == 1)[0]
     matrices_foreground = matrices[indices]
     matrices_foreground = np.resize(matrices_foreground,
@@ -176,6 +203,12 @@ def duplicate_data(matrices, ground_truth_sift_label):
 
 
 def classifier(matrices, ground_truth_sift_label):
+    """
+    In this function, we tried the naive bayes approach and MLP classifier, turned out MLP classifier works very well.
+    :param matrices: All the matrices for training
+    :param ground_truth_sift_label: the ground truth label for the matrices
+    :return:
+    """
     matrices, ground_truth_sift_label = duplicate_data(matrices, ground_truth_sift_label)
     matrices = matrices.astype(float)
     matrix_features = []
@@ -234,12 +267,22 @@ def classifier(matrices, ground_truth_sift_label):
 
 
 def matrix_to_point(trans_matrix):
+    """
+    In this function, we tried to use SVD to map the matrix to 3D vector space.
+    :param trans_matrix:
+    :return:
+    """
     u, s, _ = np.linalg.svd(trans_matrix)
     u_s_sum = np.dot(u, np.diag(s)).sum(axis=1)
     return u_s_sum
 
 
 def matrix_processing(matrices):
+    """
+    Get all the result by applying SVD
+    :param matrices:
+    :return:
+    """
     matrix_features = []
     for matrix in matrices:
         feature_point = matrix_to_point(matrix.astype(float))
@@ -250,7 +293,7 @@ def matrix_processing(matrices):
 
 def matrix_processing_tsne(matrices):
     """
-
+    This function tries different dimensionality reduction method to map a matrix to 3D vector space.
     :param matrices:
     :return:
     """
@@ -347,7 +390,7 @@ def matrix_processing_new(matrices):
 
 def testing():
     """
-    Main function of our approach, read data from *.npy file, then
+    Main function of our approach, read data from *.npy file, then tries different approach for test
      choose one of our approach to test (classifier, svd, tsne, etc.)
     :return:
     """
