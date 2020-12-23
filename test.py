@@ -9,9 +9,18 @@ from numpy import array, cross
 from numpy.linalg import solve, norm
 import os
 import cv2
+from skimage.segmentation import slic, mark_boundaries
 
 
 def get_trans_matrices(current_keys, current_descriptors, next_keys, next_descriptors):
+    """
+    Get the homogenous transformation matrix between two frame with key points.
+    :param current_keys: key points of current frame
+    :param current_descriptors: descriptors corresponding to the key points of current frame
+    :param next_keys: key points of next frame
+    :param next_descriptors: descriptors corresponding to the key points of next frame
+    :return: the transformation matrix if able to get, else an array of 1
+    """
     FLANN_INDEX_KDTREE = 1
     index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
     search_params = dict(checks=50)
@@ -47,6 +56,15 @@ def get_trans_matrices(current_keys, current_descriptors, next_keys, next_descri
 
 
 def get_feature_matrix(feature_distance, num_of_neighbour, kp_coords, current_features, next_features):
+    """
+    Get the transformation matrix for each feature point(SIFT/SURF features) with its neighbouring feature points
+    :param feature_distance:
+    :param num_of_neighbour:
+    :param kp_coords:
+    :param current_features:
+    :param next_features:
+    :return: the transformation matrix if able to get, else an array of 1
+    """
     idx = np.argpartition(feature_distance, num_of_neighbour)
     partial_kp = []
     for index in idx[:num_of_neighbour]:
@@ -55,7 +73,19 @@ def get_feature_matrix(feature_distance, num_of_neighbour, kp_coords, current_fe
     return get_trans_matrices(partial_kp, partial_des, next_features[0], next_features[1])
 
 
+def get_mask(image, kp):
+    labels = slic(image, 200, compactness=10.0, max_iter=20, sigma=1, enforce_connectivity=True,
+                  start_label=1)
+    print(np.max(labels))
+    print(labels)
+
+
 def display(model):
+    """
+    Get the predicted result
+    :param model:
+    :return:
+    """
     image_sequence = []
     # read cars2
     path = "/Users/yifeima/Documents/CMPUT414/BackgroundSubtractionForMovingCamera/moseg_dataset/"
@@ -121,6 +151,8 @@ def display(model):
                 kp.append(current_features[0][i])
 
         image = image_sequence[current_index]
+        get_mask(image, kp)
+        exit()
         out_image = image
 
         img = cv2.drawKeypoints(image, kp, out_image)
@@ -128,9 +160,6 @@ def display(model):
                     "/output/output_{}.jpg".format(current_index), img)
         cv2.imshow("features", img)
         cv2.waitKey(10)
-
-
-    pass
 
 
 def duplicate_data(matrices, ground_truth_sift_label):
@@ -146,7 +175,7 @@ def duplicate_data(matrices, ground_truth_sift_label):
     return matrices[p], ground_truth_sift_label[p]
 
 
-def naive_bayes(matrices, ground_truth_sift_label):
+def classifier(matrices, ground_truth_sift_label):
     matrices, ground_truth_sift_label = duplicate_data(matrices, ground_truth_sift_label)
     matrices = matrices.astype(float)
     matrix_features = []
@@ -168,6 +197,14 @@ def naive_bayes(matrices, ground_truth_sift_label):
                           n_iter_no_change=100)
     # model = BernoulliNB()
     model.fit(matrix_features, ground_truth_sift_label)
+
+    plt.plot(model.loss_curve_)
+    plt.show()
+    plt.savefig('loss_curve.png')
+    plt.clf()
+    plt.plot(model.validation_scores_)
+    plt.show()
+    plt.savefig('validation_scores.png')
 
     matrices_test = np.load("test.npy", allow_pickle=True)
     ground_truth_test = np.load("test_ground.npy")
@@ -193,7 +230,6 @@ def naive_bayes(matrices, ground_truth_sift_label):
 
     print("Confusion matrix:\n", confusion_matrix(ground_truth_test, predict))
 
-    exit()
     display(model)
 
 
@@ -213,6 +249,11 @@ def matrix_processing(matrices):
 
 
 def matrix_processing_tsne(matrices):
+    """
+
+    :param matrices:
+    :return:
+    """
     matrices = matrices.astype(float)
     matrix_features = []
     for matrix in matrices:
@@ -232,6 +273,15 @@ def matrix_processing_tsne(matrices):
 
 
 def get_angle(a, b, c):
+    """
+    This function calculate the angle between 3 vector a, b, c
+    Our idea was to calculate the angel between each vector to get a new vector, proved not working since each unit
+    vector is perpendicular to each other.
+    :param a:
+    :param b:
+    :param c:
+    :return: a list contains angle between each vector
+    """
     a = a / np.linalg.norm(a)
     b = b / np.linalg.norm(b)
     c = c / np.linalg.norm(c)
@@ -241,10 +291,14 @@ def get_angle(a, b, c):
     b_c = np.arccos(np.clip(np.dot(b, c), -1.0, 1.0))
     return [a_b, a_c, b_c]
 
-    pass
-
 
 def matrix_processing_new(matrices):
+    """
+    This function is not currently used in our approach, it was used to try different method, this function currently
+    append all the matrices of a frame then calculate SVD of the 3X3N matrix, where N is the number of total matrices.
+    :param matrices:
+    :return: a array contains vectorized matrices
+    """
     concatenated_matrices = matrices[0].astype(float)
     print(len(concatenated_matrices))
     matrix_features = []
@@ -292,6 +346,11 @@ def matrix_processing_new(matrices):
 
 
 def testing():
+    """
+    Main function of our approach, read data from *.npy file, then
+     choose one of our approach to test (classifier, svd, tsne, etc.)
+    :return:
+    """
     path = "/Users/yifeima/Documents/CMPUT414/BackgroundSubtractionForMovingCamera/"
     matrices_file = [i for i in os.listdir(path) if os.path.isfile(os.path.join(path, i)) and 'matrices' in i]
     ground_truth_file = [i for i in os.listdir(path) if os.path.isfile(os.path.join(path, i)) and 'ground_truth' in i]
@@ -321,8 +380,13 @@ def testing():
     # matrix_features = matrix_processing_tsne(matrices)
     # exit()
     #
-    naive_bayes(matrices, ground_truth_sift_label)
+    classifier(matrices, ground_truth_sift_label)
     exit()
+
+    '''
+        the following code is used to plot vectors in 3D space, is not part of main algorithm
+    '''
+
     matrix_features = matrix_processing(matrices)
     #
     indices_of_label = np.where(ground_truth_sift_label == 0)[0]
